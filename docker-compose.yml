@@ -1,0 +1,68 @@
+version: '3.9'
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: sentinel_postgres
+    environment:
+      POSTGRES_USER: sentinel
+      POSTGRES_PASSWORD: sentinelpass
+      POSTGRES_DB: sentinel_db
+    volumes:
+      - ./docker/db:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - sentinel_net
+
+  redis:
+    image: redis:7
+    container_name: sentinel_redis
+    ports:
+      - "6379:6379"
+    networks:
+      - sentinel_net
+
+  vault:
+    image: hashicorp/vault:1.15
+    container_name: sentinel_vault
+    environment:
+      VAULT_DEV_ROOT_TOKEN_ID: root
+      VAULT_DEV_LISTEN_ADDRESS: "0.0.0.0:8200"
+    ports:
+      - "8200:8200"
+    cap_add:
+      - IPC_LOCK
+    volumes:
+      - ./docker/vault:/vault/file
+    networks:
+      - sentinel_net
+    command: server -dev
+
+  backend:
+    build: ./docker/backend
+    container_name: sentinel_backend
+    depends_on:
+      - postgres
+      - redis
+      - vault
+    ports:
+      - "3001:3001"
+    env_file:
+      - ./docker/backend/.env
+    networks:
+      - sentinel_net
+
+  frontend:
+    build: ./docker/frontend
+    container_name: sentinel_frontend
+    depends_on:
+      - backend
+    ports:
+      - "4173:4173"
+    networks:
+      - sentinel_net
+
+networks:
+  sentinel_net:
+    driver: bridge

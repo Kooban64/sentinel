@@ -1,0 +1,21 @@
+# Node dependencies
+**/node_modules
+**/dist
+**/.env
+**/npm-debug.log
+
+# Docker
+**/.docker
+**/docker-volumes
+**/*.pid
+**/*.sock
+
+# System
+.DS_Store
+*.log
+
+# Editor
+*.swp
+*.swo
+.idea/
+.vscode/
